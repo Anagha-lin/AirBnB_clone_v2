@@ -1,29 +1,27 @@
 #!/usr/bin/python3
-""" """
-from tests.test_models.test_base_model import test_basemodel
+"""Test cases for the Review class."""
+from tests.test_models.test_base_model import BaseModelTest
 from models.review import Review
 
 
-class test_review(test_basemodel):
-    """ """
+class TestReview(BaseModelTest):
+    """Test cases for the Review class."""
 
-    def __init__(self, *args, **kwargs):
-        """ """
-        super().__init__(*args, **kwargs)
-        self.name = "Review"
-        self.value = Review
+    def setUp(self):
+        """Set up test environment."""
+        super().setUp()
+        self.cls = Review
+        self.obj = self.cls()
 
     def test_place_id(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.place_id), str)
+        """Test if place_id attribute is of type str."""
+        self.assertIsInstance(self.obj.place_id, str)
 
     def test_user_id(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.user_id), str)
+        """Test if user_id attribute is of type str."""
+        self.assertIsInstance(self.obj.user_id, str)
 
     def test_text(self):
-        """ """
-        new = self.value()
-        self.assertEqual(type(new.text), str)
+        """Test if text attribute is of type str."""
+        self.assertIsInstance(self.obj.text, str)
+
