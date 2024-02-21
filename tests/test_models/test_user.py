@@ -1,31 +1,34 @@
 #!/usr/bin/python3
-"""Test cases for the User class."""
-from tests.test_models.test_base_model import BaseModelTest
+""" """
+from tests.test_models.test_base_model import test_basemodel
 from models.user import User
 
 
-class TestUser(BaseModelTest):
-    """Test cases for the User class."""
+class test_User(test_basemodel):
+    """ """
 
-    def setUp(self):
-        """Set up test environment."""
-        super().setUp()
-        self.cls = User
-        self.obj = self.cls()
+    def __init__(self, *args, **kwargs):
+        """ """
+        super().__init__(*args, **kwargs)
+        self.name = "User"
+        self.value = User
 
     def test_first_name(self):
-        """Test if first_name attribute is of type str."""
-        self.assertIsInstance(self.obj.first_name, str)
+        """ """
+        new = self.value()
+        self.assertEqual(type(new.first_name), str)
 
     def test_last_name(self):
-        """Test if last_name attribute is of type str."""
-        self.assertIsInstance(self.obj.last_name, str)
+        """ """
+        new = self.value()
+        self.assertEqual(type(new.last_name), str)
 
     def test_email(self):
-        """Test if email attribute is of type str."""
-        self.assertIsInstance(self.obj.email, str)
+        """ """
+        new = self.value()
+        self.assertEqual(type(new.email), str)
 
     def test_password(self):
-        """Test if password attribute is of type str."""
-        self.assertIsInstance(self.obj.password, str)
-
+        """ """
+        new = self.value()
+        self.assertEqual(type(new.password), str)
