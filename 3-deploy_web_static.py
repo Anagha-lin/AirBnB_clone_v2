@@ -1,110 +1,52 @@
 #!/usr/bin/python3
 """
-A module for deploying an archive to web servers using Fabric.
+Fabric script based on the file 2-do_deploy_web_static.py that creates and
+distributes an archive to the web servers
 """
-import os
-from fabric.api import env, runs_once
+
+from fabric.api import env, local, put, run
 from datetime import datetime
-from fabric.operations import local
-from fabric.context_managers import lcd
-
-# Set the Fabric environment variables
-env.hosts = ['xx-web-01', 'xx-web-02']
-env.user = 'ubuntu'
+from os.path import exists, isdir
+env.hosts = ['100.26.244.78', '54.174.44.186']
 
 
-@runs_once
 def do_pack():
-    """
-    Compresses the web_static folder into a .tgz archive
-
-    Returns:
-        (str): Path to the compressed archive if successful, None otherwise
-    """
+    """generates a tgz archive"""
     try:
-        # Create the versions folder if it doesn't exist
-        local("mkdir -p versions")
-
-        # Generate timestamp for the archive name
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-
-        # Compress the web_static folder into a .tgz archive
-        archive_name = "versions/web_static_{}.tgz".format(timestamp)
-        with lcd("web_static"):
-            local("tar -cvzf ../{} .".format(archive_name))
-
-        return archive_name
-    except Exception as e:
-        print("An error occurred during compression:", str(e))
+        date = datetime.now().strftime("%Y%m%d%H%M%S")
+        if isdir("versions") is False:
+            local("mkdir versions")
+        file_name = "versions/web_static_{}.tgz".format(date)
+        local("tar -cvzf {} web_static".format(file_name))
+        return file_name
+    except:
         return None
 
 
 def do_deploy(archive_path):
-    """
-    Distributes an archive to web servers and deploys it.
-
-    Args:
-        archive_path (str): Path to the archive file to be deployed.
-
-    Returns:
-        bool: True if all operations are successful, False otherwise.
-    """
-    if not os.path.exists(archive_path):
-        print("Archive does not exist:", archive_path)
+    """distributes an archive to the web servers"""
+    if exists(archive_path) is False:
         return False
-
     try:
-        # Upload the archive to the /tmp/ directory of the web server
+        file_n = archive_path.split("/")[-1]
+        no_ext = file_n.split(".")[0]
+        path = "/data/web_static/releases/"
         put(archive_path, '/tmp/')
-
-        # Extract the archive to the appropriate directory
-        archive_name = os.path.basename(archive_path)
-        release_folder = '/data/web_static/releases/' + \
-            archive_name.split('.')[0]
-        run('mkdir -p {}'.format(release_folder))
-        run('tar -xzf /tmp/{} -C {}'.format(archive_name, release_folder))
-
-        # Delete the archive from the web server
-        run('rm /tmp/{}'.format(archive_name))
-
-        # Move the contents of the extracted folder to the release folder
-        run('mv {}/web_static/* {}'.format(release_folder, release_folder))
-
-        # Delete the empty web_static directory
-        run('rm -rf {}/web_static'.format(release_folder))
-
-        # Delete the existing symbolic link
+        run('mkdir -p {}{}/'.format(path, no_ext))
+        run('tar -xzf /tmp/{} -C {}{}/'.format(file_n, path, no_ext))
+        run('rm /tmp/{}'.format(file_n))
+        run('mv {0}{1}/web_static/* {0}{1}/'.format(path, no_ext))
+        run('rm -rf {}{}/web_static'.format(path, no_ext))
         run('rm -rf /data/web_static/current')
-
-        # Create a new symbolic link
-        run('ln -s {} /data/web_static/current'.format(release_folder))
-
-        print("New version deployed!")
+        run('ln -s {}{}/ /data/web_static/current'.format(path, no_ext))
         return True
-    except Exception as e:
-        print("An error occurred during deployment:", str(e))
+    except:
         return False
 
 
 def deploy():
-    """
-    Creates and distributes an archive to web servers and deploys it.
-
-    Returns:
-        bool: True if all operations are successful, False otherwise.
-    """
-    # Call the do_pack function and store the path of the created archive
+    """creates and distributes an archive to the web servers"""
     archive_path = do_pack()
-
-    # Return False if no archive has been created
-    if not archive_path:
-        print("Failed to create archive.")
+    if archive_path is None:
         return False
-
-    # Call the do_deploy function using the new path of the new archive
     return do_deploy(archive_path)
-
-
-if __name__ == "__main__":
-    deploy()
-
